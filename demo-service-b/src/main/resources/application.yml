@@ -5,10 +5,15 @@ spring:
   application:
     name: demo-service-b
 
+eureka-pro:
+  eureka:
+    client-username: eureka-client
+    client-password: client123
+
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://${eureka-pro.eureka.client-username}:${eureka-pro.eureka.client-password}@localhost:8761/eureka/,http://${eureka-pro.eureka.client-username}:${eureka-pro.eureka.client-password}@localhost:8762/eureka/
     registry-fetch-interval-seconds: 5
   instance:
     prefer-ip-address: true

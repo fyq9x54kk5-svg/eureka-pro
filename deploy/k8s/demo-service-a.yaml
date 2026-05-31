@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-service-a
+  namespace: eureka-pro
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-service-a
+  template:
+    metadata:
+      labels:
+        app: demo-service-a
+    spec:
+      containers:
+        - name: demo-service-a
+          image: eureka-pro/demo-service-a:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SERVER_PORT
+              value: "8081"
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: demo-service-a
+          envFrom:
+            - configMapRef:
+                name: eureka-pro-config
+            - secretRef:
+                name: eureka-pro-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            initialDelaySeconds: 25
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            initialDelaySeconds: 45
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-service-a
+  namespace: eureka-pro
+spec:
+  selector:
+    app: demo-service-a
+  ports:
+    - port: 8081
+      targetPort: 8081

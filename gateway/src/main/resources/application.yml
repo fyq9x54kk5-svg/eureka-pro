@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+        - id: demo-service-a
+          uri: lb://demo-service-a
+          predicates:
+            - Path=/api/a/**
+          filters:
+            - RewritePath=/api/a/(?<segment>.*), /api/${segment}
+        - id: demo-service-b
+          uri: lb://demo-service-b
+          predicates:
+            - Path=/api/b/**
+          filters:
+            - RewritePath=/api/b/(?<segment>.*), /api/${segment}
+
+eureka-pro:
+  eureka:
+    client-username: eureka-client
+    client-password: client123
+  gateway:
+    auth:
+      enabled: true
+      token: gateway-token
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka-pro.eureka.client-username}:${eureka-pro.eureka.client-password}@localhost:8761/eureka/,http://${eureka-pro.eureka.client-username}:${eureka-pro.eureka.client-password}@localhost:8762/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

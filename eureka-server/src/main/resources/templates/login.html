@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eureka 控制台登录</title>
+  <link rel="stylesheet" href="/eureka/css/custom-dashboard.css">
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <h1>Eureka Pro</h1>
+    <p class="subtitle">服务注册中心控制台</p>
+
+    <div th:if="${param.error}" class="alert alert-error">账号或密码错误</div>
+    <div th:if="${param.logout}" class="alert alert-success">已安全退出</div>
+
+    <form method="post" action="/login">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <label for="username">账号</label>
+      <input id="username" name="username" type="text" autocomplete="username" required>
+
+      <label for="password">密码</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+      <button type="submit">登录控制台</button>
+    </form>
+
+    <div class="hint">
+      控制台账号：<code>admin / admin123</code>（管理员）<br>
+      只读账号：<code>viewer / viewer123</code><br>
+      注册中心 API：<code>eureka-client / client123</code>（HTTP Basic）
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eureka-pro-config
+  namespace: eureka-pro
+data:
+  SPRING_PROFILES_ACTIVE: container
+  EUREKA_PEER_1: eureka-server-0.eureka-server:8761
+  EUREKA_PEER_2: eureka-server-1.eureka-server:8761
+  EUREKA_PRO_EUREKA_CLIENT_USERNAME: eureka-client
+  EUREKA_PRO_GATEWAY_AUTH_ENABLED: "true"

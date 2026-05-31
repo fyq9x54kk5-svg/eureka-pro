@@ -1,0 +1,233 @@
+version: '3.8'
+
+services:
+  eureka-server-1:
+    build:
+      context: .
+      args:
+        MODULE: eureka-server
+    image: ${IMAGE_PREFIX:-eureka-pro}/eureka-server:${IMAGE_TAG:-1.0.0}
+    container_name: eureka-server-1
+    hostname: ${EUREKA_SERVER_1_HOSTNAME:-eureka-server-1}
+    ports:
+      - "${EUREKA_SERVER_1_PORT:-8761}:${EUREKA_SERVER_1_PORT:-8761}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-container}
+      SERVER_PORT: "${EUREKA_SERVER_1_PORT:-8761}"
+      EUREKA_INSTANCE_HOSTNAME: ${EUREKA_SERVER_1_HOSTNAME:-eureka-server-1}
+      EUREKA_PEER_1: ${EUREKA_PEER_1:-eureka-server-1:8761}
+      EUREKA_PEER_2: ${EUREKA_PEER_2:-eureka-server-2:8761}
+      EUREKA_PRO_EUREKA_CLIENT_USERNAME: ${EUREKA_CLIENT_USERNAME:-eureka-client}
+      EUREKA_PRO_EUREKA_CLIENT_PASSWORD: ${EUREKA_CLIENT_PASSWORD:-client123}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:${EUREKA_SERVER_1_PORT:-8761}/actuator/health || exit 1"]
+      interval: ${HEALTHCHECK_INTERVAL:-15s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-10}
+      start_period: ${EUREKA_HEALTHCHECK_START_PERIOD:-60s}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${EUREKA_MEMORY_LIMIT:-1024m}
+          cpus: '${EUREKA_CPU_LIMIT:-1.0}'
+        reservations:
+          memory: ${EUREKA_MEMORY_RESERVATION:-512m}
+          cpus: '${EUREKA_CPU_RESERVATION:-0.5}'
+    logging:
+      driver: "${LOG_DRIVER:-json-file}"
+      options:
+        max-size: "${LOG_MAX_SIZE:-50m}"
+        max-file: "${LOG_MAX_FILE:-5}"
+        tag: "eureka-peer1"
+    networks:
+      - eureka-net
+
+  eureka-server-2:
+    image: ${IMAGE_PREFIX:-eureka-pro}/eureka-server:${IMAGE_TAG:-1.0.0}
+    container_name: eureka-server-2
+    hostname: ${EUREKA_SERVER_2_HOSTNAME:-eureka-server-2}
+    ports:
+      - "${EUREKA_SERVER_2_PORT:-8762}:${EUREKA_SERVER_1_PORT:-8761}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-container}
+      SERVER_PORT: "${EUREKA_SERVER_1_PORT:-8761}"
+      EUREKA_INSTANCE_HOSTNAME: ${EUREKA_SERVER_2_HOSTNAME:-eureka-server-2}
+      EUREKA_PEER_1: ${EUREKA_PEER_1:-eureka-server-1:8761}
+      EUREKA_PEER_2: ${EUREKA_PEER_2:-eureka-server-2:8761}
+      EUREKA_PRO_EUREKA_CLIENT_USERNAME: ${EUREKA_CLIENT_USERNAME:-eureka-client}
+      EUREKA_PRO_EUREKA_CLIENT_PASSWORD: ${EUREKA_CLIENT_PASSWORD:-client123}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200}
+    depends_on:
+      eureka-server-1:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:${EUREKA_SERVER_1_PORT:-8761}/actuator/health || exit 1"]
+      interval: ${HEALTHCHECK_INTERVAL:-15s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-10}
+      start_period: ${EUREKA_HEALTHCHECK_START_PERIOD:-60s}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${EUREKA_MEMORY_LIMIT:-1024m}
+          cpus: '${EUREKA_CPU_LIMIT:-1.0}'
+        reservations:
+          memory: ${EUREKA_MEMORY_RESERVATION:-512m}
+          cpus: '${EUREKA_CPU_RESERVATION:-0.5}'
+    logging:
+      driver: "${LOG_DRIVER:-json-file}"
+      options:
+        max-size: "${LOG_MAX_SIZE:-50m}"
+        max-file: "${LOG_MAX_FILE:-5}"
+        tag: "eureka-peer2"
+    networks:
+      - eureka-net
+
+  demo-service-a:
+    build:
+      context: .
+      args:
+        MODULE: demo-service-a
+    image: ${IMAGE_PREFIX:-eureka-pro}/demo-service-a:${IMAGE_TAG:-1.0.0}
+    container_name: demo-service-a
+    hostname: ${DEMO_SERVICE_A_HOSTNAME:-demo-service-a}
+    ports:
+      - "${DEMO_SERVICE_A_PORT:-8081}:${DEMO_SERVICE_A_PORT:-8081}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-container}
+      SERVER_PORT: "${DEMO_SERVICE_A_PORT:-8081}"
+      EUREKA_INSTANCE_HOSTNAME: ${DEMO_SERVICE_A_HOSTNAME:-demo-service-a}
+      EUREKA_PEER_1: ${EUREKA_PEER_1:-eureka-server-1:8761}
+      EUREKA_PEER_2: ${EUREKA_PEER_2:-eureka-server-2:8761}
+      EUREKA_PRO_EUREKA_CLIENT_USERNAME: ${EUREKA_CLIENT_USERNAME:-eureka-client}
+      EUREKA_PRO_EUREKA_CLIENT_PASSWORD: ${EUREKA_CLIENT_PASSWORD:-client123}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200}
+    depends_on:
+      eureka-server-1:
+        condition: service_healthy
+      eureka-server-2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:${DEMO_SERVICE_A_PORT:-8081}/actuator/health || exit 1"]
+      interval: ${HEALTHCHECK_INTERVAL:-15s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-8}
+      start_period: ${SERVICE_HEALTHCHECK_START_PERIOD:-45s}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${SERVICE_MEMORY_LIMIT:-512m}
+          cpus: '${SERVICE_CPU_LIMIT:-0.5}'
+        reservations:
+          memory: ${SERVICE_MEMORY_RESERVATION:-256m}
+          cpus: '${SERVICE_CPU_RESERVATION:-0.25}'
+    logging:
+      driver: "${LOG_DRIVER:-json-file}"
+      options:
+        max-size: "${LOG_MAX_SIZE:-30m}"
+        max-file: "${LOG_MAX_FILE:-5}"
+        tag: "demo-service-a"
+    networks:
+      - eureka-net
+
+  demo-service-b:
+    build:
+      context: .
+      args:
+        MODULE: demo-service-b
+    image: ${IMAGE_PREFIX:-eureka-pro}/demo-service-b:${IMAGE_TAG:-1.0.0}
+    container_name: demo-service-b
+    hostname: ${DEMO_SERVICE_B_HOSTNAME:-demo-service-b}
+    ports:
+      - "${DEMO_SERVICE_B_PORT:-8082}:${DEMO_SERVICE_B_PORT:-8082}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-container}
+      SERVER_PORT: "${DEMO_SERVICE_B_PORT:-8082}"
+      EUREKA_INSTANCE_HOSTNAME: ${DEMO_SERVICE_B_HOSTNAME:-demo-service-b}
+      EUREKA_PEER_1: ${EUREKA_PEER_1:-eureka-server-1:8761}
+      EUREKA_PEER_2: ${EUREKA_PEER_2:-eureka-server-2:8761}
+      EUREKA_PRO_EUREKA_CLIENT_USERNAME: ${EUREKA_CLIENT_USERNAME:-eureka-client}
+      EUREKA_PRO_EUREKA_CLIENT_PASSWORD: ${EUREKA_CLIENT_PASSWORD:-client123}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200}
+    depends_on:
+      demo-service-a:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:${DEMO_SERVICE_B_PORT:-8082}/actuator/health || exit 1"]
+      interval: ${HEALTHCHECK_INTERVAL:-15s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-8}
+      start_period: ${SERVICE_HEALTHCHECK_START_PERIOD:-45s}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${SERVICE_MEMORY_LIMIT:-512m}
+          cpus: '${SERVICE_CPU_LIMIT:-0.5}'
+        reservations:
+          memory: ${SERVICE_MEMORY_RESERVATION:-256m}
+          cpus: '${SERVICE_CPU_RESERVATION:-0.25}'
+    logging:
+      driver: "${LOG_DRIVER:-json-file}"
+      options:
+        max-size: "${LOG_MAX_SIZE:-30m}"
+        max-file: "${LOG_MAX_FILE:-5}"
+        tag: "demo-service-b"
+    networks:
+      - eureka-net
+
+  gateway:
+    build:
+      context: .
+      args:
+        MODULE: gateway
+    image: ${IMAGE_PREFIX:-eureka-pro}/gateway:${IMAGE_TAG:-1.0.0}
+    container_name: gateway
+    hostname: ${GATEWAY_HOSTNAME:-gateway}
+    ports:
+      - "${GATEWAY_PORT:-8080}:${GATEWAY_PORT:-8080}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-container}
+      SERVER_PORT: "${GATEWAY_PORT:-8080}"
+      EUREKA_INSTANCE_HOSTNAME: ${GATEWAY_HOSTNAME:-gateway}
+      EUREKA_PEER_1: ${EUREKA_PEER_1:-eureka-server-1:8761}
+      EUREKA_PEER_2: ${EUREKA_PEER_2:-eureka-server-2:8761}
+      EUREKA_PRO_EUREKA_CLIENT_USERNAME: ${EUREKA_CLIENT_USERNAME:-eureka-client}
+      EUREKA_PRO_EUREKA_CLIENT_PASSWORD: ${EUREKA_CLIENT_PASSWORD:-client123}
+      EUREKA_PRO_GATEWAY_AUTH_ENABLED: ${GATEWAY_AUTH_ENABLED:-true}
+      EUREKA_PRO_GATEWAY_AUTH_TOKEN: ${GATEWAY_AUTH_TOKEN:-gateway-token}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200}
+    depends_on:
+      demo-service-b:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:${GATEWAY_PORT:-8080}/actuator/health || exit 1"]
+      interval: ${HEALTHCHECK_INTERVAL:-15s}
+      timeout: ${HEALTHCHECK_TIMEOUT:-5s}
+      retries: ${HEALTHCHECK_RETRIES:-8}
+      start_period: ${SERVICE_HEALTHCHECK_START_PERIOD:-45s}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    deploy:
+      resources:
+        limits:
+          memory: ${GATEWAY_MEMORY_LIMIT:-1024m}
+          cpus: '${GATEWAY_CPU_LIMIT:-1.0}'
+        reservations:
+          memory: ${GATEWAY_MEMORY_RESERVATION:-512m}
+          cpus: '${GATEWAY_CPU_RESERVATION:-0.5}'
+    logging:
+      driver: "${LOG_DRIVER:-json-file}"
+      options:
+        max-size: "${LOG_MAX_SIZE:-50m}"
+        max-file: "${LOG_MAX_FILE:-5}"
+        tag: "gateway"
+    networks:
+      - eureka-net
+
+networks:
+  eureka-net:
+    driver: ${NETWORK_DRIVER:-bridge}

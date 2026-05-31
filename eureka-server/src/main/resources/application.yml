@@ -4,6 +4,28 @@ server:
 spring:
   application:
     name: eureka-server
+  thymeleaf:
+    cache: false
+
+eureka-pro:
+  eureka:
+    client-username: eureka-client
+    client-password: client123
+  security:
+    users:
+      - username: admin
+        password: admin123
+        roles:
+          - ADMIN
+          - VIEWER
+      - username: viewer
+        password: viewer123
+        roles:
+          - VIEWER
+      - username: eureka-client
+        password: client123
+        roles:
+          - CLIENT
 
 eureka:
   instance:
@@ -14,7 +36,6 @@ eureka:
     service-url:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
   server:
-    # 开发环境关闭自我保护，便于快速验证实例上下线
     enable-self-preservation: false
     eviction-interval-timer-in-ms: 5000
     response-cache-update-interval-ms: 3000
@@ -27,5 +48,5 @@ management:
 
 logging:
   level:
-    com.example.eurekapro: INFO
+    com.eurekapro: INFO
     com.netflix.eureka: INFO

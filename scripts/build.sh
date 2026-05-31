@@ -8,12 +8,19 @@ echo "Building eureka-pro..."
 mvn -q -DskipTests package
 
 echo
-echo "Start services in separate terminals:"
-echo "  1) mvn -f eureka-server/pom.xml spring-boot:run"
-echo "  2) mvn -f demo-service-a/pom.xml spring-boot:run"
-echo "  3) mvn -f demo-service-b/pom.xml spring-boot:run"
+echo "=== 单节点模式 ==="
+echo "  java -jar eureka-server/target/eureka-server-1.0.0-SNAPSHOT.jar"
+echo
+echo "=== 高可用双节点模式（推荐）==="
+echo "  java -jar eureka-server/target/eureka-server-1.0.0-SNAPSHOT.jar --spring.profiles.active=peer1"
+echo "  java -jar eureka-server/target/eureka-server-1.0.0-SNAPSHOT.jar --spring.profiles.active=peer2"
+echo
+echo "=== 业务服务 ==="
+echo "  java -jar gateway/target/gateway-1.0.0-SNAPSHOT.jar"
+echo "  java -jar demo-service-a/target/demo-service-a-1.0.0-SNAPSHOT.jar"
+echo "  java -jar demo-service-b/target/demo-service-b-1.0.0-SNAPSHOT.jar"
 echo
 echo "Verify:"
-echo "  Eureka dashboard: http://localhost:8761"
-echo "  Registry summary: http://localhost:8761/admin/registry/summary"
-echo "  Service B call A: http://localhost:8082/api/call-a"
+echo "  Eureka dashboard: http://localhost:8761 (admin/admin123)"
+echo "  Gateway -> A:     curl http://localhost:8080/api/a/hello"
+echo "  Gateway -> B:     curl -H 'X-Auth-Token: gateway-token' http://localhost:8080/api/b/call-a"

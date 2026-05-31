@@ -16,3 +16,17 @@ target/
 # VS Code / Cursor
 .vscode/
 .cursor/
+
+# Docker
+.dockerenv
+
+# Environment files (sensitive data)
+.env
+!.env.example
+
+# Wrapper installation directory
+/opt/eureka-pro-wrapper/
+
+# Heap dumps
+*.hprof
+heapdump*

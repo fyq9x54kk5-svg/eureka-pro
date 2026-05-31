@@ -1,0 +1,13 @@
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${eureka-pro.eureka.client-username}:${eureka-pro.eureka.client-password}@${EUREKA_PEER_1}/eureka/,http://${eureka-pro.eureka.client-username}:${eureka-pro.eureka.client-password}@${EUREKA_PEER_2}/eureka/
+  instance:
+    prefer-ip-address: true
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:${HOSTNAME:localhost}}
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true

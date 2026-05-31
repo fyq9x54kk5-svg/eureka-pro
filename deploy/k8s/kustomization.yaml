@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: eureka-pro
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - eureka-server-service.yaml
+  - eureka-server-statefulset.yaml
+  - demo-service-a.yaml
+  - demo-service-b.yaml
+  - gateway.yaml
+
+images:
+  - name: eureka-pro/eureka-server
+    newTag: "1.0.0"
+  - name: eureka-pro/gateway
+    newTag: "1.0.0"
+  - name: eureka-pro/demo-service-a
+    newTag: "1.0.0"
+  - name: eureka-pro/demo-service-b
+    newTag: "1.0.0"

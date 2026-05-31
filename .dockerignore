@@ -1,0 +1,8 @@
+.git
+.idea
+.vscode
+.cursor
+**/target
+**/*.iml
+**/.DS_Store
+deploy/k8s/.local
